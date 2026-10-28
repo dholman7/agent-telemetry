@@ -1,5 +1,7 @@
 # Agent Telemetry
 
+**Live:** [dholman7.github.io/agent-telemetry](https://dholman7.github.io/agent-telemetry/)
+
 A static dashboard over every run [agent-eval-gate](https://github.com/dholman7/agent-eval-gate) has published: how often each coding agent's Playwright tests succeed, how many seeded bugs they catch, how often they fail on correct code, and what each trial cost. Each trial can be opened to show why it passed or failed, its OpenTelemetry trace, and the agent's own log.
 
 ## What it shows
@@ -32,7 +34,7 @@ npm run build      # static site in out/
 
 `AEG_REPO` points at a different checkout. `BASE_PATH` serves the site under a subpath, such as `/agent-telemetry` on GitHub Pages.
 
-CI clones agent-eval-gate, then runs lint, types, and the static build on every push, plus once a week to pick up newly published runs.
+CI clones agent-eval-gate, then runs lint, types, and the static build on every push. The Pages workflow deploys the site from `main`, and rebuilds weekly to pick up newly published runs.
 
 ## Not in v1
 

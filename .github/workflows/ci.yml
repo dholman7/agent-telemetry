@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Picks up newly published runs in agent-eval-gate.
-  schedule:
-    - cron: "0 6 * * 1"
 
 permissions:
   contents: read
@@ -20,7 +17,7 @@ jobs:
     name: Secret scan
     # gitleaks-action scans from the first pushed commit's parent, which fails on a repo's
     # first push (the root commit has none). That push is scanned locally before publishing.
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000')
+    if: github.event_name != 'push' || github.event.before != '0000000000000000000000000000000000000000'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
