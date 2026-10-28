@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agent Telemetry
 
-## Getting Started
+A static dashboard over every run [agent-eval-gate](https://github.com/dholman7/agent-eval-gate) has published: how often each coding agent's Playwright tests succeed, how many seeded bugs they catch, how often they fail on correct code, and what each trial cost. Each trial can be opened to show why it passed or failed, its OpenTelemetry trace, and the agent's own log.
 
-First, run the development server:
+## What it shows
+
+**All runs**, grouped by benchmark split. Each metric is drawn as a point with its 95% interval on a shared 0–100% axis. Two runs only count as different when their intervals don't overlap, which is the same rule agent-eval-gate's CI gate applies. The deterministic anchors (the reference tests, and the app's existing tests) are drawn in gray to show the top and bottom of the scale.
+
+**One run** per page:
+
+- headline numbers with their intervals, including pass^k (all *k* trials of a task succeed) for multi-trial runs
+- seeded bugs caught by kind (authorization, ordering, validation, and so on)
+- a task × trial grid, where each cell shows a status icon and a label, plus bugs caught (`2/2`). It opens on the first failing trial.
+- for the selected trial: the harness verdict and its reasons, the test failures on correct code, a trace waterfall (agent time vs scoring time, with token counts), and the agent's log
+
+A trial's status follows the harness's rule: it succeeds when the test file type-checks, passes against the correct app, and carries the task tag. Bug detection is scored separately.
+
+## How it works
+
+Everything is read at build time. [`lib/data.ts`](lib/data.ts) loads `baselines/*.json` (run results) and `baselines/traces/*.jsonl` (one OpenTelemetry span per line, as `ReadableSpan.to_json()` writes it) from an agent-eval-gate checkout. Spans are grouped into one trace per trial: `aeg.trial` is the parent of `aeg.agent` and `aeg.score`, and `aeg.agent` carries the `gen_ai.usage.*` token counts. `next build` with `output: "export"` renders one page per run, and needs no server or database.
+
+Tooltips are plain CSS and work on hover and on keyboard focus. The only client-side JavaScript is the trial selector.
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/dholman7/agent-eval-gate ../agent-eval-gate
+npm ci
+npm run dev        # http://localhost:3000
+npm run build      # static site in out/
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`AEG_REPO` points at a different checkout. `BASE_PATH` serves the site under a subpath, such as `/agent-telemetry` on GitHub Pages.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+CI clones agent-eval-gate, then runs lint, types, and the static build on every push, plus once a week to pick up newly published runs.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Not in v1
 
-## Learn More
+- Trends across harness or agent versions; runs are compared side by side, not over time
+- Live ingestion over OTLP; traces come from files the harness writes
+- Per-tool-call spans inside the agent span
 
-To learn more about Next.js, take a look at the following resources:
+## License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+[MIT](LICENSE)

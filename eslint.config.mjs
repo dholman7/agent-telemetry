@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // CI checks out the data source here.
+    "agent-eval-gate/**",
   ]),
 ]);
 
