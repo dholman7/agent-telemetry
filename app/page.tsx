@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { IntervalAxis, IntervalBar } from "@/components/IntervalBar";
-import { describe, isAnchor, listRuns, type Run } from "@/lib/data";
+import { describe, groupKey, isAnchor, isUi, listRuns, type Run } from "@/lib/data";
 import { usd } from "@/lib/format";
 
 const SPLITS: Record<string, { title: string; note: string }> = {
@@ -16,35 +16,42 @@ const SPLITS: Record<string, { title: string; note: string }> = {
 
 export default function Overview() {
   const runs = listRuns();
-  const splits = [...new Set(runs.map((r) => r.meta.split))];
+  const groups = [...new Set(runs.map(groupKey))];
   return (
     <>
       <section className="intro">
-        <h1>How coding agents do at writing Playwright API tests</h1>
+        <h1>How coding agents do at writing Playwright tests</h1>
         <p>
-          Every run that <a href="https://github.com/dholman7/agent-eval-gate">agent-eval-gate</a> has published against the vendor-intake
-          benchmark. A trial succeeds when the agent&apos;s test file type-checks, passes against the correct app, and carries the task tag.
+          Every run that <a href="https://github.com/dholman7/agent-eval-gate">agent-eval-gate</a> has published against vendor-intake-app:
+          API tests, and UI tests that drive the web app. A trial succeeds when the agent&apos;s test file type-checks, passes against the correct app, and carries the task tag.
           Seeded bugs are then applied one at a time to see whether the tests catch them.
         </p>
         <p className="rule">
           Each bar is a 95% interval. Two runs only differ when their bars don&apos;t overlap, and the CI gate uses the same rule.
         </p>
       </section>
-      {splits.map((split) => (
-        <SplitTable key={split} split={split} runs={runs.filter((r) => r.meta.split === split)} />
+      {groups.map((key) => (
+        <SplitTable key={key} runs={runs.filter((r) => groupKey(r) === key)} />
       ))}
     </>
   );
 }
 
-function SplitTable({ split, runs }: { split: string; runs: Run[] }) {
-  const info = SPLITS[split] ?? { title: `${split} split`, note: "" };
+function SplitTable({ runs }: { runs: Run[] }) {
+  const split = runs[0].meta.split;
+  const ui = isUi(runs[0]);
+  const base = SPLITS[split] ?? { title: `${split} split`, note: "" };
+  const info = {
+    title: `${ui ? "UI" : "API"} tests: ${base.title.toLowerCase()}`,
+    note: ui ? "Bugs are seeded in the web app, so only a test that drives the screens can catch them." : base.note,
+  };
+  const anchor = `${ui ? "ui" : "api"}-${split}`;
   const tasks = new Set(runs[0].trials.map((t) => t.task_id)).size;
   const bugs = runs[0].summary.bug_detection.n / runs[0].meta.trials;
   return (
-    <section className="split" aria-labelledby={`split-${split}`}>
+    <section className="split" aria-labelledby={`split-${anchor}`}>
       <header className="split-head">
-        <h2 id={`split-${split}`}>{info.title}</h2>
+        <h2 id={`split-${anchor}`}>{info.title}</h2>
         <p>
           {tasks} tasks, {bugs} seeded bugs. {info.note}
         </p>

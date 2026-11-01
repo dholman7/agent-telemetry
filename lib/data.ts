@@ -82,6 +82,12 @@ interface RawSpan {
   attributes: Record<string, string | number | boolean>;
 }
 
+/** Runs of the UI benchmark, whose tests drive the web app (agent-eval-gate's vendor-intake-ui). */
+export const isUi = (run: Run): boolean => run.meta.benchmark.split("@")[0].endsWith("-ui");
+
+/** Runs are only comparable within one benchmark and split. */
+export const groupKey = (run: Run): string => `${run.meta.benchmark}|${run.meta.split}`;
+
 /** Deterministic agents (the reference tests, the repo's existing tests) anchor the scale; they aren't contenders. */
 export const isAnchor = (run: Run): boolean => run.meta.mode === "deterministic";
 
@@ -91,12 +97,15 @@ export function listRuns(): Run[] {
     throw new Error(`No agent-eval-gate checkout at ${SOURCE}. Set AEG_REPO to its path.`);
   }
   const splitOrder = (run: Run) => (run.meta.split === "heldout" ? 0 : 1);
+  // API benchmark first, then UI; within each, held-out before dev.
+  const benchmarkOrder = (run: Run) => (isUi(run) ? 1 : 0);
   return fs
     .readdirSync(BASELINES)
     .filter((f) => f.endsWith(".json"))
     .map((file) => loadRun(path.basename(file, ".json")))
     .sort(
       (a, b) =>
+        benchmarkOrder(a) - benchmarkOrder(b) ||
         splitOrder(a) - splitOrder(b) ||
         Number(isAnchor(a)) - Number(isAnchor(b)) ||
         b.summary.task_success.value - a.summary.task_success.value ||
