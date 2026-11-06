@@ -88,6 +88,24 @@ export const isUi = (run: Run): boolean => run.meta.benchmark.split("@")[0].ends
 /** Runs are only comparable within one benchmark and split. */
 export const groupKey = (run: Run): string => `${run.meta.benchmark}|${run.meta.split}`;
 
+export type Role = "agent" | "baseline" | "anchor";
+
+/** What a run is there to show: the agent under test, a one-call baseline, or a fixed anchor. */
+export function role(run: Run): Role {
+  if (isAnchor(run)) return "anchor";
+  return run.meta.agent.startsWith("single-call") ? "baseline" : "agent";
+}
+
+/** An agent's version from its name ("storywright-v0.3-ui" -> [0, 3]); unnamed early runs were v0.1. */
+export function agentVersion(run: Run): [number, number] | null {
+  if (role(run) !== "agent") return null;
+  const m = run.meta.agent.match(/v(\d+)\.(\d+)/);
+  return m ? [Number(m[1]), Number(m[2])] : [0, 1];
+}
+
+/** The benchmark's version ("vendor-intake@v2" -> 2). */
+export const benchmarkVersion = (run: Run): number => Number(run.meta.benchmark.split("@v")[1] ?? 0);
+
 /** Deterministic agents (the reference tests, the repo's existing tests) anchor the scale; they aren't contenders. */
 export const isAnchor = (run: Run): boolean => run.meta.mode === "deterministic";
 
@@ -106,11 +124,21 @@ export function listRuns(): Run[] {
     .sort(
       (a, b) =>
         benchmarkOrder(a) - benchmarkOrder(b) ||
+        benchmarkVersion(b) - benchmarkVersion(a) ||
         splitOrder(a) - splitOrder(b) ||
-        Number(isAnchor(a)) - Number(isAnchor(b)) ||
+        ROLE_ORDER[role(a)] - ROLE_ORDER[role(b)] ||
+        compareVersions(agentVersion(b), agentVersion(a)) ||
+        b.meta.trials - a.meta.trials ||
         b.summary.task_success.value - a.summary.task_success.value ||
         a.id.localeCompare(b.id),
     );
+}
+
+const ROLE_ORDER: Record<Role, number> = { agent: 0, baseline: 1, anchor: 2 };
+
+export function compareVersions(a: [number, number] | null, b: [number, number] | null): number {
+  if (!a || !b) return 0;
+  return a[0] - b[0] || a[1] - b[1];
 }
 
 export function loadRun(id: string): Run {
