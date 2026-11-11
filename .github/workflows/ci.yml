@@ -40,6 +40,9 @@ jobs:
         with:
           repository: dholman7/vendor-intake-app
           path: vendor-intake-app
+          # Only the result files: the app's own TypeScript would otherwise be linted and
+          # type-checked as part of this site.
+          sparse-checkout: backend/evals/extraction/results
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
