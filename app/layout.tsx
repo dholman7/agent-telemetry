@@ -20,6 +20,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             Agent Telemetry
           </Link>
           <nav aria-label="Projects">
+            <Link href="/">Test-writing agents</Link>
+            <Link href="/extraction/">Extraction</Link>
             <a href="https://github.com/dholman7/agent-eval-gate">agent-eval-gate</a>
             <a href="https://github.com/dholman7/storywright">Storywright</a>
             <a href="https://github.com/dholman7/agent-telemetry">Source</a>

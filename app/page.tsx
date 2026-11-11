@@ -62,7 +62,8 @@ export default function Overview() {
           so the difference shows what running and repairing the tests adds.
         </p>
         <p className="rule">
-          Each bar is a 95% interval. Two runs only differ when their bars don&apos;t overlap, and the CI gate uses the same rule.
+          Each bar is a 95% interval. When two runs&apos; bars don&apos;t overlap, the difference isn&apos;t noise. Overlapping bars can still differ: the CI
+          gate compares runs task by task, which is more sensitive than comparing bars.
         </p>
       </section>
       {groups.map((key) => {
