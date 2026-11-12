@@ -151,8 +151,39 @@ export function compareVersions(a: [number, number] | null, b: [number, number] 
   return a[0] - b[0] || a[1] - b[1];
 }
 
+// Fields every page reads. A result file without one fails the build here, naming the file,
+// instead of rendering a page with holes in it.
+const REQUIRED = [
+  "meta.benchmark",
+  "meta.agent",
+  "meta.split",
+  "meta.trials",
+  "meta.target_ref",
+  "summary.task_success",
+  "summary.bug_detection",
+  "summary.false_failure",
+  "summary.cost_usd",
+  "trials",
+];
+
+export function missingFields(raw: unknown, required: string[] = REQUIRED): string[] {
+  return required.filter((dotted) => {
+    let node: unknown = raw;
+    for (const key of dotted.split(".")) {
+      node = node !== null && typeof node === "object" ? (node as Record<string, unknown>)[key] : undefined;
+    }
+    return node === undefined;
+  });
+}
+
 export function loadRun(id: string): Run {
-  const raw = JSON.parse(fs.readFileSync(path.join(BASELINES, `${id}.json`), "utf8")) as Omit<Run, "id" | "totalCost" | "hasTrace">;
+  const file = path.join(BASELINES, `${id}.json`);
+  const parsed: unknown = JSON.parse(fs.readFileSync(file, "utf8"));
+  const missing = missingFields(parsed);
+  if (missing.length > 0) {
+    throw new Error(`${file} is missing ${missing.join(", ")}: has agent-eval-gate's result format changed?`);
+  }
+  const raw = parsed as Omit<Run, "id" | "totalCost" | "hasTrace">;
   const trials = raw.trials.map((t) => ({ ...t, agent_log: t.agent_log ?? null, clean_failures: t.clean_failures ?? [] }));
   return {
     ...raw,

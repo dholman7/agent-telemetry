@@ -58,7 +58,8 @@ export function TrialExplorer({ trials, traces, k }: Props) {
                     const v = verdict(t);
                     const bugs = caught(t);
                     const id = key(task, i);
-                    const description = `${task} trial ${i + 1}: ${v.label}, caught ${bugs.caught} of ${bugs.total} seeded bugs`;
+                    // Contains the cell's visible "caught/total", so speech input can name the button by what it shows.
+                    const description = `${task} trial ${i + 1}: ${v.label}, ${bugs.caught}/${bugs.total} seeded bugs caught`;
                     return (
                       <td key={i}>
                         <button
@@ -144,7 +145,7 @@ function TrialPanel({ trial, trace, k }: { trial: Trial; trace: TrialTrace | und
       {failures.length > 0 && (
         <section>
           <h4>Failures on correct code</h4>
-          <pre className="log">{failures.join("\n")}</pre>
+          <pre className="log" tabIndex={0}>{failures.join("\n")}</pre>
         </section>
       )}
 
@@ -156,7 +157,7 @@ function TrialPanel({ trial, trace, k }: { trial: Trial; trace: TrialTrace | und
       <section>
         <h4>Agent log</h4>
         {trial.agent_log ? (
-          <pre className="log">{trial.agent_log}</pre>
+          <pre className="log" tabIndex={0}>{trial.agent_log}</pre>
         ) : (
           <p className="empty">This agent writes no log, or the run predates log capture.</p>
         )}
