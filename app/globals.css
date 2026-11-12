@@ -828,7 +828,8 @@ table.grid tbody th {
   stroke-width: 1.5;
 }
 
-table.layouts td[data-imperfect] {
+table.layouts td[data-imperfect],
+table.layouts td[data-hit] {
   color: var(--critical);
   font-weight: 500;
 }
