@@ -28,7 +28,15 @@ export interface Trial {
   success: boolean;
   kills: Record<string, boolean>;
   bugs: string[];
-  usage: { input_tokens: number; output_tokens: number; cost_usd: number; model: string | null };
+  usage: {
+    // All input, cached or not; the cache fields (absent before agent-eval-gate recorded them) are parts of it.
+    input_tokens: number;
+    output_tokens: number;
+    cache_read_input_tokens?: number;
+    cache_write_input_tokens?: number;
+    cost_usd: number;
+    model: string | null;
+  };
   duration_s: number;
 }
 
@@ -56,6 +64,8 @@ export interface Run {
   };
   trials: Trial[];
   totalCost: number;
+  /** Input tokens across trials and the parts read from and written to the prompt cache; null when not recorded. */
+  cache: { input: number; read: number; write: number } | null;
   hasTrace: boolean;
 }
 
@@ -149,7 +159,18 @@ export function loadRun(id: string): Run {
     id,
     trials,
     totalCost: trials.reduce((sum, t) => sum + t.usage.cost_usd, 0),
+    cache: cacheTotals(trials),
     hasTrace: fs.existsSync(path.join(BASELINES, "traces", `${id}.jsonl`)),
+  };
+}
+
+export function cacheTotals(trials: Trial[]): Run["cache"] {
+  const recorded = trials.filter((t) => t.usage.cache_read_input_tokens !== undefined);
+  if (recorded.length === 0) return null;
+  return {
+    input: recorded.reduce((sum, t) => sum + t.usage.input_tokens, 0),
+    read: recorded.reduce((sum, t) => sum + (t.usage.cache_read_input_tokens ?? 0), 0),
+    write: recorded.reduce((sum, t) => sum + (t.usage.cache_write_input_tokens ?? 0), 0),
   };
 }
 

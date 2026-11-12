@@ -3,7 +3,7 @@ import Link from "next/link";
 import { IntervalAxis, IntervalBar } from "@/components/IntervalBar";
 import { TrialExplorer } from "@/components/TrialExplorer";
 import { describe, isAnchor, listRuns, loadRun, loadTraces } from "@/lib/data";
-import { interval, pct, ratio, usd } from "@/lib/format";
+import { interval, pct, ratio, tokens, usd } from "@/lib/format";
 
 export const dynamicParams = false;
 
@@ -51,6 +51,13 @@ export default async function RunPage({ params }: PageProps<"/runs/[id]">) {
           detail={`${ratio(s.false_failure)} trials that ran, CI ${interval(s.false_failure)}`}
         />
         <Stat label="Cost" value={usd(run.totalCost)} detail={anchor ? "no model calls" : `${usd(s.cost_usd.value)} per trial`} />
+        {run.cache && run.cache.input > 0 && (
+          <Stat
+            label="Input from prompt cache"
+            value={pct(run.cache.read / run.cache.input)}
+            detail={`${tokens(run.cache.read)} of ${tokens(run.cache.input)} input tokens; ${tokens(run.cache.write)} written`}
+          />
+        )}
       </dl>
 
       {categories.length > 0 && (

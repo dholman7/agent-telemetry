@@ -12,6 +12,10 @@ export function usd(x: number): string {
   return x < 0.01 ? `$${x.toFixed(4)}` : `$${x.toFixed(2)}`;
 }
 
+export function tokens(n: number): string {
+  return n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1000 ? `${Math.round(n / 1000)}K` : String(n);
+}
+
 export function seconds(ms: number): string {
   return ms < 1000 ? `${Math.round(ms)} ms` : `${(ms / 1000).toFixed(1)} s`;
 }
