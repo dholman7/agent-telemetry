@@ -43,6 +43,17 @@ jobs:
           # Only the result files: the app's own TypeScript would otherwise be linted and
           # type-checked as part of this site.
           sparse-checkout: backend/evals/extraction/results
+      # The red teams' published results, nothing else (see lib/attacks.ts).
+      - uses: actions/checkout@v7
+        with:
+          repository: dholman7/ci-context-mcp
+          path: ci-context-mcp
+          sparse-checkout: redteam/results
+      - uses: actions/checkout@v7
+        with:
+          repository: dholman7/agent-dev-skills
+          path: agent-dev-skills
+          sparse-checkout: evals/review/attacks
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -54,3 +65,5 @@ jobs:
         env:
           AEG_REPO: ${{ github.workspace }}/agent-eval-gate
           EXTRACTION_REPO: ${{ github.workspace }}/vendor-intake-app
+          CI_CONTEXT_REPO: ${{ github.workspace }}/ci-context-mcp
+          REVIEW_REPO: ${{ github.workspace }}/agent-dev-skills
