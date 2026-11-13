@@ -26,6 +26,7 @@ export function Waterfall({ trace }: { trace: TrialTrace }) {
                 className="wf-bar"
                 data-span={span.name}
                 tabIndex={0}
+                role="img"
                 aria-label={`${span.name}: ${seconds(span.duration)}, starting at ${seconds(span.start)}`}
                 style={{ left: `${(span.start / total) * 100}%`, width: `max(4px, ${(span.duration / total) * 100}%)` }}
               >

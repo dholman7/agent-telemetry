@@ -67,3 +67,6 @@ jobs:
           EXTRACTION_REPO: ${{ github.workspace }}/vendor-intake-app
           CI_CONTEXT_REPO: ${{ github.workspace }}/ci-context-mcp
           REVIEW_REPO: ${{ github.workspace }}/agent-dev-skills
+      # Every page renders, and none has a serious or critical WCAG 2.1 AA violation (axe).
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:smoke

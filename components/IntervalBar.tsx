@@ -5,7 +5,7 @@ import { interval, pct, ratio } from "@/lib/format";
 export function IntervalBar({ estimate, name, anchor = false }: { estimate: Estimate; name: string; anchor?: boolean }) {
   const { value, low, high } = estimate;
   return (
-    <div className="interval" data-anchor={anchor || undefined} tabIndex={0} aria-label={`${name}: ${pct(value)}, 95% CI ${interval(estimate)}, ${ratio(estimate)}`}>
+    <div className="interval" data-anchor={anchor || undefined} tabIndex={0} role="img" aria-label={`${name}: ${pct(value)}, 95% CI ${interval(estimate)}, ${ratio(estimate)}`}>
       <div className="interval-track" aria-hidden>
         <span className="interval-band" style={{ left: `${low * 100}%`, width: `${(high - low) * 100}%` }} />
         <span className="interval-dot" style={{ left: `${value * 100}%` }} />
